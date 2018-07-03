@@ -1,0 +1,47 @@
+---
+
+- name: create deploy group
+  group:
+    name: deploy
+    state: present
+
+- name: create deploy user
+  user:
+    name: deploy
+    shell: /bin/bash
+    home: /home/deploy
+    createhome: yes
+    groups: deploy
+
+- name: Get groups list
+  shell: /usr/bin/getent group | awk -F":" '{print $1}'
+  register: etc_groups
+
+- name: Add secondary Groups to user
+  user: name="deploy" groups="{{item}}" append=yes
+  when: '"{{item}}" in etc_groups.stdout_lines'
+  with_items: 
+    - goread
+    - rvm
+    - nvm
+    - nginx
+
+- name: create deploy ssh directory
+  file:
+    path: /home/deploy/.ssh
+    owner: deploy
+    group: deploy
+    mode: 0770
+    state: directory
+
+- name: define authorized keys syncrhonizer configuration
+  set_fact:
+    username: deploy
+    artifacts:
+      - authorized_keys
+
+- name: install authorized keys syncrhonizer
+  include: roles/deploy/tasks/synchronizer.yml
+
+- name: adding deploy user to sudoers group
+  include: roles/sudo/tasks/main.yml

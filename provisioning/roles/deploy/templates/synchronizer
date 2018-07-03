@@ -1,0 +1,17 @@
+#!/bin/bash
+# GoRead - www.goread.com.br
+# Sincronizacao de chaves RSA
+
+bucket="{{ aws_s3_infrastructure_bucket }}"
+path="rsa/deploy"
+home=$(echo ~{{ username }})
+
+{% for artifact in artifacts %}
+if [ "$(/usr/local/bin/aws s3 ls s3://$bucket/$path/ | grep '{{ artifact }}$' | awk {'print $4'})" == "{{ artifact }}" ]; then
+  /usr/local/bin/aws s3 cp s3://$bucket/$path/{{ artifact }} $home/.ssh/{{ artifact }}
+  chmod 600 $home/.ssh/{{ artifact }}
+else
+  echo -ne "\nFalha ao listar o bucket. Verifique as URLs utilizadas no AWS S3 ou problemas de conectividade!\n\n"
+fi
+
+{% endfor %}

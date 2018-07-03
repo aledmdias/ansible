@@ -1,0 +1,3 @@
+ntp:
+  - { server: iba-sp-proxy1a.ibacloud.com.br }
+  - { server: iba-sp-proxy1b.ibacloud.com.br }

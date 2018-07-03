@@ -1,0 +1,118 @@
+---
+
+# include vault environment variables
+- include_vars:
+    file: "roles/varnish/vault/{{ _environment }}.yml"
+
+# include common environment variables
+- include_vars:
+    file: "roles/varnish/vars/common.yml"
+
+# include environment variables
+- include_vars:
+    file: "roles/varnish/vars/{{ _environment }}.yml"
+
+- name: adding varnish gpg key
+  apt_key:
+    url: https://packagecloud.io/varnishcache/varnish5/gpgkey
+    state: present
+        
+- name: adding varnish repository
+  apt_repository:
+    repo: "deb https://packagecloud.io/varnishcache/varnish5/ubuntu/ xenial main"
+    state: present
+
+- name: install varnish
+  apt:
+    name: varnish
+    state: present
+
+- name: check if varnish service was already removed
+  stat:
+    path: /lib/systemd/system/varnish.service
+  register: default_varnish_service
+
+- name: stop default varnish
+  shell: systemctl stop varnish
+  when: default_varnish_service.stat.exists
+
+- name: create varnish configuration directory
+  file:
+    path: /etc/varnish/conf.d
+    owner: varnish
+    group: varnish
+    mode: 0770
+    state: directory
+
+- name: install varnish vcl configuration
+  template:
+    src: vcl.conf
+    dest: "/etc/varnish/default-{{ item.listener }}.vcl"
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{ varnish_instances }}"
+
+- name: remove varnish default vcl configuration
+  file:
+    path: /etc/varnish/default.vcl
+    state: absent
+
+- name: install varnish secret configuration
+  template:
+    src: secret
+    dest: /etc/varnish/secret
+    owner: root
+    group: root
+    mode: 0600
+
+- name: install varnish default configuration
+  template:
+    src: default/varnish
+    dest: "/etc/default/varnish-{{ item.listener }}"
+    owner: varnish
+    group: varnish
+    mode: 0770
+  with_items: "{{ varnish_instances }}"
+
+- name: remove varnish default configuration
+  file:
+    path: /etc/default/varnish
+    state: absent
+
+- name: install varnish systemctl configuration
+  template:
+    src: systemctl/varnish.service
+    dest: "/lib/systemd/system/varnish-{{ item.listener }}.service"
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{ varnish_instances }}"
+
+- name: remove varnish systemctl configuration
+  file:
+    path: /lib/systemd/system/varnish.service
+    state: absent
+
+- name: remove varnish init.d
+  file:
+    path: /etc/init.d/varnish
+    state: absent
+
+- name: create internal varnish directory
+  file:
+    path: "/abd/varnish/{{ item.name }}-{{ item.listener }}"
+    state: directory
+    owner: varnish
+    group: varnish
+    mode: 0770
+    recurse: yes
+  with_items: "{{ varnish_instances }}"
+
+- name: reload systemctl
+  shell: systemctl daemon-reload
+
+- name: restart varnish
+  include: roles/varnish/handlers/main.yml
+  notify: restart varnish
+  with_items: "{{ varnish_instances }}"

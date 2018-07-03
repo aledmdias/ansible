@@ -1,0 +1,16 @@
+---
+
+- name: PlayBook to Provisioning MongoDB ReplicaSet
+  hosts:
+    - mongodbreplica
+    - mongodbarbiter
+  become: root
+  vars:
+    _environment: "{{ _environment }}"
+    _primary: "{{ groups['mongodbreplica'][0] }}" 
+  vars_files:
+    - "../config/{{ _environment }}/vault.yml"
+    - "../config/{{ _environment }}/vars.yml"
+  roles:
+    - mongodb-setup
+    - mongodb-replica-set

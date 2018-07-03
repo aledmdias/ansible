@@ -1,0 +1,65 @@
+---
+
+- name: check application directory
+  stat:
+    path: /abd/app
+  register: application_installed
+
+- name: create goread group
+  group:
+    name: goread
+    state: present
+  when: not application_installed.stat.exists
+
+- name: create goread user
+  user:
+    name: goread
+    shell: /bin/bash
+    groups: goread
+  when: not application_installed.stat.exists
+
+- name: create directory
+  file:
+    path: /abd/
+    state: directory
+  when: not application_installed.stat.exists
+
+- name: create application directory
+  file:
+    path: /abd/app
+    state: directory
+  when: not application_installed.stat.exists
+
+- name: create logs directory
+  file:
+    path: /abd/logs
+    state: directory
+  when: not application_installed.stat.exists
+
+- name: create database directory
+  file:
+    path: /abd/db
+    state: directory
+  when: not application_installed.stat.exists
+
+- name: create pids directory
+  file:
+    path: /abd/pids
+    state: directory
+  when: not application_installed.stat.exists
+
+- name: change directory permission
+  file:
+    dest: /abd
+    owner: goread
+    group: goread
+    mode: 0770
+    recurse: yes
+  when: not application_installed.stat.exists
+
+- name: update user permission
+  user:
+    name: ubuntu
+    groups: goread
+    append: yes
+  when: not application_installed.stat.exists

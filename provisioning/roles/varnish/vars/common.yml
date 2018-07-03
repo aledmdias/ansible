@@ -1,0 +1,3 @@
+varnish_instances:
+  - { name: "public", listener: 6081, administration: 6082, visibility: "public" }
+  - { name: "internal", listener: 6083, administration: 6084, visibility: "internal" }

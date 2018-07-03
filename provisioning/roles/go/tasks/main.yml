@@ -1,0 +1,5 @@
+---
+
+- name: go agent
+  include: roles/go/tasks/agent.yml
+  tags: go-agent

@@ -1,0 +1,6 @@
+go_server: go-server.ibacloud.com.br
+go_server_port: 8153
+
+go_agent_work_dir: /var/lib/go-agent
+go_agent_daemon: Y
+go_agent_vcn: Y

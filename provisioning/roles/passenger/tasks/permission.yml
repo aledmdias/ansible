@@ -1,0 +1,8 @@
+---
+- name: change passenger logs permission
+  file:
+    dest: /abd/logs/passenger
+    owner: goread
+    group: goread
+    mode: 0775
+    recurse: yes

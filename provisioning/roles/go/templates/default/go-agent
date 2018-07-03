@@ -1,0 +1,10 @@
+GO_SERVER={{ go_server }}
+export GO_SERVER
+GO_SERVER_PORT={{ go_server_port }}
+export GO_SERVER_PORT
+AGENT_WORK_DIR={{ go_agent_work_dir }}
+export AGENT_WORK_DIR
+DAEMON={{ go_agent_daemon }}
+VCN={{ go_agent_vcn }}
+JAVA_HOME={{ java_home }}
+export JAVA_HOME

@@ -1,0 +1,15 @@
+---
+- name: PlayBook to Provisioning Service on Blue Green
+  hosts:
+    - "{{ pool }}_service"
+  become: root
+  vars_files:
+    - "../config/{{ _environment }}/vault.yml"
+    - "../config/{{ _environment }}/vars.yml"
+  roles:
+    - rvm
+    - nginx
+    - passenger
+    - deploy
+    - secret
+    - logrotate

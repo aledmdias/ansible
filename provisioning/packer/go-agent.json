@@ -1,0 +1,35 @@
+{
+  "variables": { "region": "", "_environment": "", "vault_password_file": "", "subnet_id": "", "instance_type": "" },
+  "provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "provisioning/go-agent.yml",
+      "extra_arguments": [
+        "--vault-password-file",
+        "{{user `vault_password_file`}}",
+        "--extra-vars",
+        "_environment={{user `_environment`}} pool=green ansible_become=yes ansible_python_interpreter=/usr/bin/python3" ],
+      "groups": ["goagent"]
+    }
+  ],
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "{{user `region`}}",
+      "source_ami": "{{ user `source_ami`}}",
+      "instance_type": "{{ user `instance_type` }}",
+      "launch_block_device_mappings": [
+        {
+          "device_name": "/dev/sda1",
+          "volume_size": 16,
+          "volume_type": "gp2",
+          "delete_on_termination": true
+        }
+      ],
+      "ssh_username": "ubuntu",
+      "ssh_port": 5022,
+      "subnet_id": "{{ user `subnet_id` }}",
+      "ami_name": "GoRead GoAgent {{isotime \"2006-01-02 03_04_05\"}} {{timestamp}}"
+    }
+  ]
+}

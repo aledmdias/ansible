@@ -1,0 +1,155 @@
+---
+
+# include environment variables
+- include_vars:
+    file: "roles/go/vars/{{ _environment }}.yml"
+
+# include java variables
+- include_vars:
+    file: "roles/java/vars/common.yml"
+
+- name: check go agent directory
+  stat:
+    path: /var/go
+  register: go_agent_installed
+
+- name: create go group
+  group:
+    name: go
+    state: present
+  when: not go_agent_installed.stat.exists
+
+- name: create go user
+  user:
+    name: go
+    shell: /bin/bash
+    home: /var/go
+    groups: go
+  when: not go_agent_installed.stat.exists
+
+- name: give access to go to use rvm
+  user:
+    name: "go"
+    groups: rvm
+    append: yes
+  when: not go_agent_installed.stat.exists
+
+- name: transfer specific go-agent version
+  copy:
+    src: go-agent-14.1.0-18882.deb
+    dest: /tmp/go-agent-14.1.0-18882.deb
+    owner: root
+    group: root
+    mode: 0755
+  when: not go_agent_installed.stat.exists
+
+- name: install specific go-agent version
+  shell: dpkg -i /tmp/go-agent-14.1.0-18882.deb
+  when: not go_agent_installed.stat.exists
+
+- name: create go agent directory
+  file:
+    path: /var/go/.ssh
+    owner: go
+    group: go
+    mode: 0775
+    state: directory
+  when: not go_agent_installed.stat.exists
+
+- name: install go private key
+  copy:
+    src: ssh/id_rsa
+    dest: /var/go/.ssh/id_rsa
+    owner: go
+    group: go
+    mode: 0600
+  when: not go_agent_installed.stat.exists
+
+- name: install go public key
+  copy:
+    src: ssh/id_rsa.pub
+    dest: /var/go/.ssh/id_rsa.pub
+    owner: go
+    group: go
+    mode: 0600
+  when: not go_agent_installed.stat.exists
+
+- name: install go config
+  copy:
+    src: ssh/config
+    dest: /var/go/.ssh/config
+    owner: go
+    group: go
+    mode: 0600
+  when: not go_agent_installed.stat.exists
+
+- name: create go agent run directory
+  file:
+    path: /var/run/go-agent
+    owner: go
+    group: go
+    mode: 0755
+    state: directory
+  when: not go_agent_installed.stat.exists
+
+- name: create go agent lib directory
+  file:
+    path: /var/lib/go-agent
+    owner: go
+    group: go
+    mode: 0775
+    state: directory
+  when: not go_agent_installed.stat.exists
+
+- name: create go agent log directory
+  file:
+    path: /var/log/go-agent
+    owner: go
+    group: go
+    mode: 0775
+    state: directory
+  when: not go_agent_installed.stat.exists
+
+- name: create go agent share directory
+  file:
+    path: /usr/share/go-agent
+    owner: go
+    group: go
+    mode: 0775
+    state: directory
+  when: not go_agent_installed.stat.exists
+
+- name: install go agent default
+  template: 
+    src: default/go-agent 
+    dest: /etc/default/go-agent
+    owner: go
+    group: go
+    mode: 0775
+  when: not go_agent_installed.stat.exists
+
+- name: distribution update/upgrade
+  include: roles/common/tasks/update-upgrade.yml
+  when: not go_agent_installed.stat.exists
+
+- name: update user permission
+  user:
+    name: go
+    groups: goread
+    append: yes
+  when: not go_agent_installed.stat.exists
+
+- name: restart go-agent
+  include: roles/go/handlers/agent.yml
+  notify: restart go-agent
+  when: not go_agent_installed.stat.exists
+
+- name: define deploy keypair syncrhonizer configuration
+  set_fact: 
+    username: go
+    artifacts:
+      - deploy
+      - deploy.pub
+
+- name: install deploy keypair syncrhonizer
+  include: roles/deploy/tasks/synchronizer.yml

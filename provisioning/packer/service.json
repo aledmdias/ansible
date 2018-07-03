@@ -1,0 +1,28 @@
+{
+  "variables": { "region": "", "_environment": "", "vault_password_file": "", "subnet_id": "", "source_ami": "", "instance_type": "" },
+  "provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "provisioning/service.yml",
+      "extra_arguments": [
+        "--vault-password-file",
+        "{{user `vault_password_file`}}",
+        "--extra-vars",
+        "_environment={{user `_environment`}} pool=green ansible_become=yes ansible_python_interpreter=/usr/bin/python3" ],
+      "groups": ["green_service"]
+    }
+  ],
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "{{user `region`}}",
+      "source_ami": "{{ user `source_ami`}}",
+      "instance_type": "{{ user `instance_type` }}",
+      "ssh_username": "ubuntu",
+      "ssh_port": 5022,
+      "subnet_id": "{{ user `subnet_id` }}",
+      "ami_name": "GoRead Service 16.04 {{isotime \"2006-01-02 03_04_05\"}} base {{ user `source_ami` }} {{timestamp}}"
+    }
+  ]
+}
+

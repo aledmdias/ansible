@@ -1,0 +1,4 @@
+---
+
+- name: restart redis
+  shell: /etc/init.d/redis-server-{{ item.port }} restart

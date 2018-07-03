@@ -1,0 +1,10 @@
+Host yum.ibacloud.com.br
+  user abril_user
+  TCPKeepAlive yes
+  IdentitiesOnly yes
+  StrictHostKeyChecking no
+
+Host bitbucket.org
+  TCPKeepAlive yes
+  IdentitiesOnly yes
+  StrictHostKeyChecking no

@@ -1,0 +1,21 @@
+---
+- name: PlayBook to Provisioning GoAgent
+  hosts:
+    - goagent
+  become: root
+  vars_files:
+    - "../config/{{ _environment }}/vault.yml"
+    - "../config/{{ _environment }}/vars.yml"
+  roles:
+    - ansible
+    - firefox
+    - java
+    - mongodb-setup
+    - mongodb-standalone
+    - ntp
+    - nvm
+    - rvm
+    - redis
+    - { role: go, tags: ['go-agent'] }
+    - functional-tests-dependencies
+    - postgresql-client

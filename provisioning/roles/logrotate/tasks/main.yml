@@ -1,0 +1,21 @@
+---
+
+- name: install logrotate
+  apt:
+    name: logrotate
+    state: present
+    force: yes
+
+- name: install logrotate configuration
+  template:
+    src: roles/logrotate/templates/logrotate.conf
+    dest: /etc/logrotate.conf
+    mode: 0644
+
+- name: install crontab
+  cron:
+    name: logrotate
+    minute: 0
+    hour: 1
+    job: "/usr/sbin/logrotate /etc/logrotate.conf"
+    user: root

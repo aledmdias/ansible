@@ -1,0 +1,37 @@
+{
+  "variables": { "region": "", "_environment": "", "vault_password_file": "", "subnet_id": "", "instance_type": "" },
+  "provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "provisioning/ami.yml",
+      "extra_arguments": [
+        "--vault-password-file",
+        "{{user `vault_password_file`}}",
+        "--extra-vars",
+        "_environment={{user `_environment`}} ansible_become=yes ansible_python_interpreter=/usr/bin/python3"
+      ],
+      "groups": ["ami"]
+    }
+  ],
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "{{user `region`}}",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "*ubuntu-xenial-16.04-amd64-server-*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["099720109477"],
+        "most_recent": true
+      },
+      "instance_type": "{{ user `instance_type` }}",
+      "ssh_username": "ubuntu",
+      "ssh_port": 5022,
+      "subnet_id": "{{ user `subnet_id` }}",
+      "ami_name": "GoRead Basic Ubuntu 16.04 {{isotime \"2006-01-02 03_04_05\"}} {{timestamp}}",
+      "user_data_file": "provisioning/packer/user_data.sh"
+    }
+  ]
+}

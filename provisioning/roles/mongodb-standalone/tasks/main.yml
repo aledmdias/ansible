@@ -1,0 +1,15 @@
+---
+
+- name: install mongodb configuration
+  template: 
+    src: mongod.conf 
+    dest: /etc/mongod.conf
+    owner: mongodb
+    group: mongodb
+    mode: 0775
+  when: not mongodb_installed.stat.exists
+
+- name: restart mongodb
+  include: roles/mongodb-setup/handlers/main.yml
+  notify: restart mongodb
+  when: not mongodb_installed.stat.exists

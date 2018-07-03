@@ -1,0 +1,3 @@
+redis_instances:
+  - { port: 6379 }
+  - { port: 6380 }

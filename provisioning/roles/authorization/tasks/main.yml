@@ -1,0 +1,23 @@
+---
+
+# include global variables
+- include_vars:
+    file: "../config/{{ _environment }}/vars.yml"
+
+- name: install authorization
+  template: 
+    src: "roles/authorization/templates/authorized_keys" 
+    dest: "/usr/local/bin/authorized_keys"
+    owner: ubuntu
+    group: ubuntu
+    mode: 0770
+
+- name: install crontab
+  cron:
+    name: authorized keys
+    minute: "*/30"
+    job: /usr/local/bin/authorized_keys
+    user: ubuntu
+
+- name: execute authorized keys
+  shell: runuser -l ubuntu -c "/usr/local/bin/authorized_keys"

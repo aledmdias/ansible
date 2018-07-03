@@ -1,0 +1,50 @@
+---
+
+# include environment variables
+- include_vars:
+    file: "roles/ntp/vars/{{ _environment }}.yml"
+
+- name: check ntp installation
+  stat:
+    path: /etc/ntp.conf
+  register: ntp_installed
+
+- name: distribution update/upgrade
+  include: roles/common/tasks/update-upgrade.yml
+  when: not ntp_installed.stat.exists
+
+- name: install ntp package
+  apt:
+    name: ntp
+    state: present
+  when: not ntp_installed.stat.exists
+
+- name: install ntp configuraiton
+  template: 
+    src: ntp.conf 
+    dest: /etc/ntp.conf
+  when: not ntp_installed.stat.exists
+
+- name: create crypto directory
+  file:
+    path: /etc/ntp/crypto
+    state: directory
+  when: not ntp_installed.stat.exists
+
+- name: install crypto file
+  copy:
+    src: crypto/pw
+    dest: /etc/ntp/crypto/pw
+    owner: root
+    group: root
+    mode: 0600
+  when: not ntp_installed.stat.exists
+
+- name: install keys file
+  copy:
+    src: keys
+    dest: /etc/ntp/keys
+    owner: root
+    group: root
+    mode: 0600
+  when: not ntp_installed.stat.exists

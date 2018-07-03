@@ -1,0 +1,10 @@
+---
+
+- name: start varnish
+  service: name=varnish-{{ item.listener }} state=started
+
+- name: stop varnish
+  service: name=varnish-{{ item.listener }} state=stopped
+
+- name: restart varnish
+  service: name=varnish-{{ item.listener }} state=restarted

@@ -1,0 +1,58 @@
+---
+
+# include vault environment variables
+- include_vars:
+    file: "roles/mongodb-replica-set/vault/{{ _environment }}.yml"
+
+# include environment variables
+- include_vars:
+    file: "roles/mongodb-replica-set/vars/{{ _environment }}.yml"
+
+- name: define mongodb configuration
+  set_fact:
+    mongodb_configuration: "{{ configuration['replica-set'] }}"
+
+- name: install mongodb credential configuration
+  template: 
+    src: user.js
+    dest: /tmp/user.js
+    mode: 0700
+  when: not mongodb_installed.stat.exists
+
+- name: install "{{ _environment }}" credentials
+  shell: "mongo --authenticationDatabase {{ mongodb_configuration.credential.db }} --shell < /tmp/user.js"
+  when: not mongodb_installed.stat.exists
+
+- name: install mongodb configuration
+  template: 
+    src: mongod.conf 
+    dest: /etc/mongod.conf
+    owner: mongodb
+    group: mongodb
+    mode: 0775
+  when: not mongodb_installed.stat.exists
+
+- name: install mongodb secret key
+  template: 
+    src: mongodb_secret_key
+    dest: /etc/mongodb_secret_key
+    owner: mongodb
+    group: mongodb
+    mode: 0400
+  when: not mongodb_installed.stat.exists
+
+- name: restart mongodb
+  include: roles/mongodb-setup/handlers/main.yml
+  notify: restart mongodb
+  when: not mongodb_installed.stat.exists
+
+- name: install mongodb replica set initialization
+  template: 
+    src: initialize.js
+    dest: /tmp/initialize.js
+    mode: 0700
+  when: not mongodb_installed.stat.exists
+
+- name: install "{{ _environment }}" replica set
+  shell: "mongo --authenticationDatabase {{ mongodb_configuration.credential.db }} --username {{ mongodb_configuration.credential.user }} --password {{ mongodb_configuration.credential.pwd }} --shell < /tmp/initialize.js"
+  when: not mongodb_installed.stat.exists

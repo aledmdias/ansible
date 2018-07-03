@@ -1,0 +1,17 @@
+---
+- name: PlayBook to Provisioning WebAccelerator on Blue Green
+  hosts:
+    - "{{ pool }}_webaccelerator"
+  become: root
+  vars:
+    pool: "{{ pool }}"
+    _environment: "{{ _environment }}"
+    service_group: "{{ pool }}_service"
+  vars_files:
+    - ../config/applications.yml
+    - "../config/{{ _environment }}/vault.yml"
+    - "../config/{{ _environment }}/vars.yml"
+  roles:
+    - varnish
+    - deploy
+    - secret

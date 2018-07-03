@@ -1,0 +1,8 @@
+---
+
+- name: distribution update/upgrade
+  apt:
+    update_cache: yes
+    upgrade: dist
+  when:
+    - ansible_distribution == "Ubuntu"

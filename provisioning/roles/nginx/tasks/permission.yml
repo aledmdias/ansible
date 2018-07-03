@@ -1,0 +1,16 @@
+---
+- name: change nginx permission
+  file:
+    dest: /etc/nginx/
+    owner: nginx
+    group: nginx
+    mode: 0775
+    recurse: yes
+
+- name: change nginx logs permission
+  file:
+    dest: /abd/logs/nginx
+    owner: nginx
+    group: nginx
+    mode: 0775
+    recurse: yes

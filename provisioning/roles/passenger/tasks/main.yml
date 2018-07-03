@@ -1,0 +1,47 @@
+---
+# TODO: gem passenger should not fave a fixed version
+- name: check passenger directory
+  stat:
+    path: /usr/local/rvm/gems/ruby-2.3.3/gems/passenger-5.1.7
+  register: passenger_installed
+
+- name: create passenger logs directory
+  file:
+    path: /abd/logs/passenger
+    state: directory
+  when: not passenger_installed.stat.exists
+
+- name: create passenger configuration directory
+  file:
+    path: /etc/nginx/passenger.d/
+    state: directory
+  when: not passenger_installed.stat.exists
+
+- name: install gem passenger
+  shell: source /etc/profile.d/rvm.sh && gem install passenger:5.1.7 --no-ri --no-rdoc
+  args:
+    executable: /bin/bash
+  when: not passenger_installed.stat.exists
+
+- name: install passenger
+  shell: source /etc/profile.d/rvm.sh && passenger-install-nginx-module --prefix /etc/nginx --nginx-source-dir /etc/nginx/src/nginx-1.10.3 --extra-configure-flags none --languages ruby --auto
+  args:
+    executable: /bin/bash
+  when: not passenger_installed.stat.exists
+
+- name: install passenger configuraiton
+  template: src=passenger.conf dest=/etc/nginx/passenger.d/passenger.conf
+  when: not passenger_installed.stat.exists
+
+- name: update nginx permission
+  include: roles/nginx/tasks/permission.yml
+  when: not passenger_installed.stat.exists
+
+- name: update passenger permission
+  include: roles/passenger/tasks/permission.yml
+  when: not passenger_installed.stat.exists
+
+- name: finish passenger installation
+  include: roles/nginx/handlers/main.yml
+  notify: restart nginx
+  when: not passenger_installed.stat.exists

@@ -1,0 +1,16 @@
+---
+
+- name: PlayBook to Provisioning AMI
+  hosts:
+    - ami
+  become: root
+  vars_files:
+    - "../config/{{ _environment }}/vault.yml"
+    - "../config/{{ _environment }}/vars.yml"
+  roles:
+    - common
+    - directory
+    - awscli
+    - ssh
+    - authorization
+    - secret

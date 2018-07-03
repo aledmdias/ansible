@@ -1,0 +1,15 @@
+---
+
+# include common variables
+- include_vars:
+    file: "roles/java/vars/common.yml"
+
+- name: install openjdk 8 jre
+  apt:
+    name: openjdk-8-jre 
+    state: present
+
+- name: append java home to bash.bashrc
+  lineinfile:
+    dest: /etc/bash.bashrc
+    line: "export JAVA_HOME={{ java_home }}"

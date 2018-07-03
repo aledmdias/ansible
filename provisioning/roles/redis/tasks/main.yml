@@ -1,0 +1,188 @@
+---
+
+# include common variables
+- include_vars:
+    file: "roles/redis/vars/common.yml"
+
+- name: check redis directory
+  stat:
+    path: /var/run/redis
+  register: redis_installed
+
+- name: create redis group
+  group:
+    name: redis
+    state: present
+  when: not redis_installed.stat.exists
+
+- name: create redis user
+  user:
+    name: redis
+    shell: /usr/sbin/nologin
+    groups: redis
+  when: not redis_installed.stat.exists
+
+- name: distribution update/upgrade
+  include: roles/common/tasks/update-upgrade.yml
+  when: not redis_installed.stat.exists
+
+- name: install redis package
+  apt:
+    name: redis-server
+    state: present
+  when: not redis_installed.stat.exists
+
+- name: create redis run directory
+  file:
+    path: "/var/run/redis"
+    owner: redis
+    group: redis
+    mode: 0775
+    state: directory
+  when: not redis_installed.stat.exists
+
+- name: create redis log directory
+  file:
+    path: "/var/log/redis"
+    owner: redis
+    group: redis
+    mode: 0775
+    state: directory
+  when: not redis_installed.stat.exists
+
+- name: stop any redis instance running
+  shell: systemctl stop redis*
+  when: not redis_installed.stat.exists
+
+- name: uninstall redis library default
+  file:
+    path: "/var/lib/redis"
+    state: absent
+  when: not redis_installed.stat.exists
+
+- name: create redis library directory
+  file:
+    path: "/var/lib/redis-{{ item.port }}"
+    owner: redis
+    group: redis
+    mode: 0775
+    state: directory
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: uninstall redis directory default
+  file:
+    path: "/etc/redis"
+    state: absent
+  when: not redis_installed.stat.exists
+
+- name: create redis instance directory
+  file:
+    path: "/etc/redis-{{ item.port }}"
+    owner: redis
+    group: redis
+    mode: 0775
+    state: directory
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: create redis pre up directory
+  file:
+    path: "/etc/redis-{{ item.port }}/redis-server.pre-up.d"
+    owner: redis
+    group: redis
+    mode: 0775
+    state: directory
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: create redis pre down directory
+  file:
+    path: "/etc/redis-{{ item.port }}/redis-server.pre-down.d"
+    owner: redis
+    group: redis
+    mode: 0775
+    state: directory
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: create redis post up directory
+  file:
+    path: "/etc/redis-{{ item.port }}/redis-server.post-up.d"
+    owner: redis
+    group: redis
+    mode: 0775
+    state: directory
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: create redis post down directory
+  file:
+    path: "/etc/redis-{{ item.port }}/redis-server.post-down.d"
+    owner: redis
+    group: redis
+    mode: 0775
+    state: directory
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: install redis configuration
+  template: 
+    src: redis.conf 
+    dest: "/etc/redis-{{ item.port }}/redis.conf"
+    owner: redis
+    group: redis
+    mode: 0775
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: uninstall redis init.d default
+  file:
+    path: "/etc/init.d/redis-server"
+    state: absent
+  when: not redis_installed.stat.exists
+
+- name: install redis init.d
+  template:
+    src: init.d/redis-server
+    dest: "/etc/init.d/redis-server-{{ item.port }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: uninstall redis service default
+  file:
+    path: "/lib/systemd/system/redis-server.service"
+    state: absent
+  when: not redis_installed.stat.exists
+
+- name: install redis service
+  template:
+    src: systemctl/redis-server.service
+    dest: "/lib/systemd/system/redis-server-{{ item.port }}.service"
+    owner: root
+    group: root
+    mode: 0755
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: reload systemctl daemon
+  shell: systemctl daemon-reload
+  when: not redis_installed.stat.exists
+
+- name: install redis on startup as defaults
+  shell: update-rc.d redis-server-{{ item.port }} defaults
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: install redis on startup as enabled
+  shell: update-rc.d redis-server-{{ item.port }} enable
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists
+
+- name: restart redis instances
+  include: roles/redis/handlers/main.yml
+  with_items: "{{ redis_instances }}"
+  when: not redis_installed.stat.exists

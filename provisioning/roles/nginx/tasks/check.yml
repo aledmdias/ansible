@@ -1,0 +1,6 @@
+---
+
+- name: check nginx global directory
+  stat:
+    path: /etc/nginx
+  register: nginx_installed

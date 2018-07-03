@@ -1,0 +1,16 @@
+---
+- name: PlayBook to Provisioning Report seerver
+  hosts:
+    - report
+  become: root
+  vars_files:
+    - "../config/{{ _environment }}/vault.yml"
+    - "../config/{{ _environment }}/vars.yml"
+  roles:
+    - rvm
+    - nvm
+    - nginx
+    - passenger
+    - deploy
+    - logrotate
+    - postgresql-client

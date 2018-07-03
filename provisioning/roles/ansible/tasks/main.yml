@@ -1,0 +1,14 @@
+---
+
+- name: check ansible installation
+  stat:
+    path: /usr/local/bin/ansible
+  register: ansible_installed
+
+- name: distribution update/upgrade
+  include: roles/common/tasks/update-upgrade.yml
+  when: not ansible_installed.stat.exists
+
+- name: install ansible
+  shell: pip install ansible
+  when: not ansible_installed.stat.exists

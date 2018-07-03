@@ -1,0 +1,68 @@
+---
+
+# include common users
+- include_vars:
+    file: "roles/nvm/vars/users.yml"
+
+- name: check nvm global directory
+  stat:
+    path: /usr/local/.nvm/
+  register: nvm_installed
+
+- name: create nvm group
+  group:
+    name: nvm
+    state: present
+  when: not nvm_installed.stat.exists
+
+- name: create nvm user
+  user:
+    name: nvm
+    shell: /usr/sbin/nologin
+    groups: nvm
+  when: not nvm_installed.stat.exists
+
+- name: install nvm
+  shell: curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
+  when: not nvm_installed.stat.exists
+
+- name: move nvm to global directory
+  shell: mv /root/.nvm /usr/local/.nvm/
+  when: not nvm_installed.stat.exists
+
+- name: change nvm permission
+  file:
+    dest: /usr/local/.nvm/
+    owner: nvm
+    group: nvm
+    mode: 0775
+    recurse: yes
+  when: not nvm_installed.stat.exists
+
+- name: append nvm to bash.bashrc
+  lineinfile:
+    dest: /etc/bash.bashrc
+    line: "source /usr/local/.nvm/nvm.sh"
+  when: not nvm_installed.stat.exists
+
+- name: nvm needs to be in profile.d to be executed by Go
+  copy:
+    src: nvm.sh
+    dest: /etc/profile.d/nvm.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: nvm install node
+  shell: source /usr/local/.nvm/nvm.sh && nvm install 6
+  args:
+    executable: /bin/bash
+  when: not nvm_installed.stat.exists
+
+- name: update user permission
+  user:
+    name: "{{ item }}"
+    groups: nvm
+    append: yes
+  with_items: "{{ users }}"
+  when: not nvm_installed.stat.exists

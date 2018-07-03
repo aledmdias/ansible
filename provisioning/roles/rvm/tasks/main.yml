@@ -1,0 +1,65 @@
+---
+
+# include common users
+- include_vars:
+    file: "roles/rvm/vars/users.yml"
+
+- name: check rvm global directory
+  stat:
+    path: /usr/local/rvm/
+  register: rvm_installed
+
+- name: create rvm group
+  group:
+    name: rvm
+    state: present
+  when: not rvm_installed.stat.exists
+
+- name: create rvm user
+  user:
+    name: rvm
+    shell: /usr/sbin/nologin
+    groups: rvm
+  when: not rvm_installed.stat.exists
+
+- name: install rvm gpg key
+  shell: gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+  when: not rvm_installed.stat.exists
+
+- name: install rvm
+  shell: curl -sSL https://get.rvm.io | bash -s stable
+  when: not rvm_installed.stat.exists
+
+- name: update rvm permission
+  include: permission.yml
+  when: not rvm_installed.stat.exists
+
+- name: append rvm to bash.bashrc
+  lineinfile:
+    dest: /etc/bash.bashrc
+    line: "source /etc/profile.d/rvm.sh"
+  when: not rvm_installed.stat.exists
+
+- name: install rvm ruby
+  shell: source /etc/profile.d/rvm.sh && rvm install ruby-2.3.3
+  args:
+    executable: /bin/bash
+  when: not rvm_installed.stat.exists
+
+- name: install rvm gem bundler
+  shell: source /etc/profile.d/rvm.sh && gem install bundler --no-ri --no-rdoc
+  args:
+    executable: /bin/bash
+  when: not rvm_installed.stat.exists
+
+- name: update rvm permission
+  include: permission.yml
+  when: not rvm_installed.stat.exists
+
+- name: update user permission
+  user:
+    name: "{{ item }}"
+    groups: rvm
+    append: yes
+  with_items: "{{ users }}"
+  when: not rvm_installed.stat.exists

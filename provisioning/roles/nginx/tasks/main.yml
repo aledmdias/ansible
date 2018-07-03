@@ -1,0 +1,95 @@
+---
+
+- include: check.yml
+
+- name: create nginx directory
+  file:
+    path: /etc/nginx
+    state: directory
+  when: not nginx_installed.stat.exists
+
+- name: create nginx source directory
+  file:
+    path: /etc/nginx/src
+    state: directory
+  when: not nginx_installed.stat.exists
+
+- name: create nginx configuration directory
+  file:
+    path: /etc/nginx/conf
+    state: directory
+  when: not nginx_installed.stat.exists
+
+- name: create nginx extra configuration directory
+  file:
+    path: /etc/nginx/conf.d
+    state: directory
+  when: not nginx_installed.stat.exists
+
+- name: create nginx group
+  group:
+    name: nginx
+    state: present
+  when: not nginx_installed.stat.exists
+
+- name: create nginx user
+  user:
+    name: nginx
+    shell: /usr/sbin/nologin
+    groups: nginx
+  when: not nginx_installed.stat.exists
+
+- name: create nginx logs directory
+  file:
+    path: /abd/logs/nginx
+    owner: nginx
+    group: nginx
+    state: directory
+  when: not nginx_installed.stat.exists
+
+- name: download stable nginx
+  shell: wget -O /etc/nginx/src/nginx-1.10.3.tar.gz http://nginx.org/download/nginx-1.10.3.tar.gz
+  args:
+    executable: /bin/bash
+  when: not nginx_installed.stat.exists
+
+- name: uncompress stable nginx
+  shell: tar -xvf /etc/nginx/src/nginx-1.10.3.tar.gz -C /etc/nginx/src/
+  args:
+    executable: /bin/bash
+  when: not nginx_installed.stat.exists
+
+- name: install nginx configuration
+  template: src=nginx.conf dest=/etc/nginx/conf/nginx.conf
+  when: not nginx_installed.stat.exists
+
+- name: install nginx status configuration
+  template: src=status.conf dest=/etc/nginx/conf.d/status.conf
+  when: not nginx_installed.stat.exists
+
+- name: install nginx default configuration
+  template: src=default/nginx dest=/etc/default/nginx
+  when: not nginx_installed.stat.exists
+
+- name: install nginx init.d configuration
+  template: src=init.d/nginx dest=/etc/init.d/nginx mode=0755
+  when: not nginx_installed.stat.exists
+
+- name: install nginx service configuration
+  template: src=systemctl/nginx.service dest=/lib/systemd/system/nginx.service
+  when: not nginx_installed.stat.exists
+
+- name: update nginx permission
+  include: permission.yml
+  when: not nginx_installed.stat.exists
+
+- name: reload systemctl
+  shell: systemctl daemon-reload
+  when: not nginx_installed.stat.exists
+
+- name: update user permission
+  user:
+    name: nginx
+    groups: goread
+    append: yes
+  when: not nginx_installed.stat.exists

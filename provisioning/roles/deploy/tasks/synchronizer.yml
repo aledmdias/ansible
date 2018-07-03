@@ -1,0 +1,20 @@
+---
+
+- name: install synchronizer
+  template: 
+    src: "roles/deploy/templates/synchronizer"
+    dest: "/usr/local/bin/deploy_synchronizer"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0770
+
+- name: install synchronizer crontab
+  cron:
+    name: deploy synchronizer
+    minute: 30
+    job: /usr/local/bin/deploy_synchronizer
+    user: "{{ username }}"
+    state: present
+
+- name: execute synchronizer
+  shell: runuser -l "{{ username }}" -c "/usr/local/bin/deploy_synchronizer"

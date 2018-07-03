@@ -1,0 +1,13 @@
+#!/bin/bash
+# GoRead - www.goread.com.br
+# Sincronizacao de chaves RSA
+
+bucket="{{ aws_s3_infrastructure_bucket }}"
+path="rsa/{{ aws_username }}/authorized_keys"
+
+if [ "$(/usr/local/bin/aws s3 ls s3://$bucket/$path | awk {'print $4'})" == "authorized_keys" ]; then
+  /usr/local/bin/aws s3 cp s3://$bucket/$path $HOME/.ssh/authorized_keys
+  chmod 600 $HOME/.ssh/authorized_keys
+else
+  echo -ne "\nFalha ao listar o bucket. Verifique as URLs utilizadas no AWS S3 ou problemas de conectividade!\n\n"
+fi

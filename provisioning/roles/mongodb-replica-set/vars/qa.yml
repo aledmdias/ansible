@@ -1,0 +1,16 @@
+mongodb_secret_key: "{{ vault_mongodb_secret_key }}"
+
+configuration:
+  replica-set:
+    credential:
+      user: "{{ vault_mongodb_username }}"
+      pwd: "{{ vault_mongodb_password }}"
+      role: root
+      db: admin
+    security:
+      enabled: true
+      authorization: enabled
+      keyFile: /etc/mongodb_secret_key
+    replication:
+      enabled: true
+      replSetName: GoRead

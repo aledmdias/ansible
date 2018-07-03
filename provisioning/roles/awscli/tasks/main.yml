@@ -1,0 +1,14 @@
+---
+
+- name: check awscli installation
+  stat:
+    path: /usr/local/bin/aws
+  register: awscli_installed
+
+- name: distribution update/upgrade
+  include: roles/common/tasks/update-upgrade.yml
+  when: not awscli_installed.stat.exists
+
+- name: install awscli
+  shell: pip install awscli
+  when: not awscli_installed.stat.exists

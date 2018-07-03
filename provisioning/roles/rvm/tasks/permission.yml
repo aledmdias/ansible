@@ -1,0 +1,8 @@
+---
+- name: change rvm permission
+  file:
+    dest: /usr/local/rvm/
+    owner: rvm
+    group: rvm
+    mode: 0775
+    recurse: yes

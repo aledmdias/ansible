@@ -1,0 +1,25 @@
+---
+
+- name: check openssh-server installation
+  stat:
+    path: /etc/ssh/
+  register: ssh_installed
+
+- name: distribution update/upgrade
+  include: roles/common/tasks/update-upgrade.yml
+  when: not ssh_installed.stat.exists
+
+- name: install openssh-server package
+  apt:
+    name: openssh-server
+    state: present
+  when: not ssh_installed.stat.exists
+
+- name: install openssh-server configuration
+  template: src=sshd_config dest=/etc/ssh/sshd_config
+  when: not ssh_installed.stat.exists
+
+- name: restart openssh-server
+  include: roles/ssh/handlers/main.yml
+  notify: restart sshd
+  when: not ssh_installed.stat.exists

@@ -1,0 +1,30 @@
+---
+- name: set timezone to America/Sao_Paulo
+  timezone:
+    name: America/Sao_Paulo
+
+- name: distribution update/upgrade
+  include: roles/common/tasks/update-upgrade.yml
+
+- name: install common packages
+  apt: name={{item}} state=present
+  with_items:
+    - htop
+    - wget
+    - git
+    - curl
+    - build-essential
+    - vim
+    - libyaml-dev
+    - libxslt1-dev
+    - xvfb
+    - libcurl4-openssl-dev
+    - libpcre3-dev
+    - python-pip
+    - gdebi
+    - gdebi-core
+    - python-dev
+    - libffi-dev
+    - libssl-dev
+  when: 
+    - ansible_distribution == "Ubuntu"

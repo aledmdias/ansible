@@ -1,0 +1,57 @@
+---
+
+- name: check mongodb directory
+  stat:
+    path: /etc/mongod.conf
+  register: mongodb_installed
+
+- name: adding mongodb repository
+  apt_repository:
+    repo: "deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.4 multiverse"
+    state: present
+  when: not mongodb_installed.stat.exists
+
+- name: adding mongodb gpg key
+  shell: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
+  when: not mongodb_installed.stat.exists
+
+- name: distribution update/upgrade
+  include: roles/common/tasks/update-upgrade.yml
+  when: not mongodb_installed.stat.exists
+
+- name: install mongodb package
+  apt:
+    name: mongodb-org
+    force: yes
+    state: present
+  when: not mongodb_installed.stat.exists
+
+- name: create mongodb log path
+  file:
+    path: /var/log/mongodb
+    owner: mongodb
+    group: mongodb
+    mode: 0775
+    state: directory
+  when: not mongodb_installed.stat.exists
+
+- name: create mongodb db path
+  file:
+    path: /var/lib/mongodb
+    owner: mongodb
+    group: mongodb
+    mode: 0775
+    state: directory
+  when: not mongodb_installed.stat.exists
+
+- name: update user permission
+  user:
+    name: mongodb
+    groups: goread
+    append: yes
+  when: not mongodb_installed.stat.exists
+
+- name: finish mongodb installation
+  include: roles/mongodb-setup/handlers/main.yml
+  notify: restart mongodb
+  when: not mongodb_installed.stat.exists
